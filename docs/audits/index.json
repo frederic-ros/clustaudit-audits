@@ -8,7 +8,7 @@
    "family": "Centroid",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:55:58Z",
+   "created": "2026-11-15T09:51:31Z",
    "issue": null,
    "sigma": "1 [0.8, 1]",
    "alpha": "8 [5, >max]",
@@ -53,7 +53,15 @@
     ]
    },
    "suite_ari": 0.657,
-   "wall_time_s": 4.3
+   "wall_time_s": 3.9,
+   "profile": {
+    "overlap": 0.5172,
+    "anisotropy": 0.6815,
+    "inter_density": 0.6984,
+    "intra_density": 0.7893,
+    "imbalance": 0.8045,
+    "eta_int": 0.4414
+   }
   },
   {
    "id": "gmm",
@@ -61,7 +69,7 @@
    "family": "Centroid",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:56:08Z",
+   "created": "2026-11-15T09:51:41Z",
    "issue": null,
    "sigma": "0.2 [0.2, 0.4]",
    "alpha": "4 [1, 5]",
@@ -106,7 +114,15 @@
     ]
    },
    "suite_ari": 0.3571,
-   "wall_time_s": 3.9
+   "wall_time_s": 4.0,
+   "profile": {
+    "overlap": 0.1097,
+    "anisotropy": 0.374,
+    "inter_density": 0.4929,
+    "intra_density": 0.5112,
+    "imbalance": 0.6244,
+    "eta_int": 0.2894
+   }
   },
   {
    "id": "spectral",
@@ -114,7 +130,7 @@
    "family": "Graph",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:56:23Z",
+   "created": "2026-11-15T09:51:56Z",
    "issue": null,
    "sigma": "1.2 [1, 1.4]",
    "alpha": "10 [8, 10]",
@@ -159,7 +175,15 @@
     ]
    },
    "suite_ari": 0.7973,
-   "wall_time_s": 8.7
+   "wall_time_s": 8.5,
+   "profile": {
+    "overlap": 0.6827,
+    "anisotropy": 0.7844,
+    "inter_density": 0.9967,
+    "intra_density": 1.0,
+    "imbalance": 0.9998,
+    "eta_int": 0.9969
+   }
   },
   {
    "id": "ward",
@@ -167,7 +191,7 @@
    "family": "Connectivity",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:56:32Z",
+   "created": "2026-11-15T09:52:06Z",
    "issue": null,
    "sigma": "0.4 [0.2, 0.8]",
    "alpha": "6 [1, 6]",
@@ -212,7 +236,15 @@
     ]
    },
    "suite_ari": 0.415,
-   "wall_time_s": 3.1
+   "wall_time_s": 3.4,
+   "profile": {
+    "overlap": 0.2263,
+    "anisotropy": 0.4529,
+    "inter_density": 0.5385,
+    "intra_density": 0.5684,
+    "imbalance": 0.7258,
+    "eta_int": 0.3025
+   }
   },
   {
    "id": "average",
@@ -220,7 +252,7 @@
    "family": "Connectivity",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:56:42Z",
+   "created": "2026-11-15T09:52:15Z",
    "issue": null,
    "sigma": "≤0.2",
    "alpha": "≤1",
@@ -265,7 +297,15 @@
     ]
    },
    "suite_ari": 0.0667,
-   "wall_time_s": 3.3
+   "wall_time_s": 3.4,
+   "profile": {
+    "overlap": 0.0,
+    "anisotropy": 0.0,
+    "inter_density": 0.0,
+    "intra_density": 0.0,
+    "imbalance": 0.0,
+    "eta_int": 0.1942
+   }
   },
   {
    "id": "dbscan",
@@ -273,7 +313,7 @@
    "family": "Density",
    "needs_k": false,
    "reference": true,
-   "created": "2026-11-15T07:56:49Z",
+   "created": "2026-11-15T09:52:22Z",
    "issue": null,
    "sigma": "0.4 [0.4, 0.4]",
    "alpha": "2 [1, 3]",
@@ -318,7 +358,15 @@
     ]
    },
    "suite_ari": 0.4187,
-   "wall_time_s": 3.1
+   "wall_time_s": 3.0,
+   "profile": {
+    "overlap": 0.1411,
+    "anisotropy": 0.1749,
+    "inter_density": 0.3071,
+    "intra_density": 0.8592,
+    "imbalance": 0.896,
+    "eta_int": 0.1489
+   }
   },
   {
    "id": "hdbscan",
@@ -326,7 +374,7 @@
    "family": "Density",
    "needs_k": false,
    "reference": true,
-   "created": "2026-11-15T07:57:00Z",
+   "created": "2026-11-15T09:52:31Z",
    "issue": null,
    "sigma": "0.4 [0.2, 0.4]",
    "alpha": "3 [1, 3]",
@@ -371,7 +419,15 @@
     ]
    },
    "suite_ari": 0.454,
-   "wall_time_s": 5.4
+   "wall_time_s": 4.6,
+   "profile": {
+    "overlap": 0.095,
+    "anisotropy": 0.3071,
+    "inter_density": 0.6289,
+    "intra_density": 0.6254,
+    "imbalance": 0.7297,
+    "eta_int": 0.5257
+   }
   },
   {
    "id": "optics",
@@ -379,7 +435,7 @@
    "family": "Density",
    "needs_k": false,
    "reference": true,
-   "created": "2026-11-15T07:58:19Z",
+   "created": "2026-11-15T09:53:51Z",
    "issue": null,
    "sigma": "0.2 [0.2, 0.4]",
    "alpha": "1.5 [1, 1.5]",
@@ -424,7 +480,15 @@
     ]
    },
    "suite_ari": 0.3284,
-   "wall_time_s": 75.5
+   "wall_time_s": 76.1,
+   "profile": {
+    "overlap": 0.0343,
+    "anisotropy": 0.1358,
+    "inter_density": 0.2184,
+    "intra_density": 0.3448,
+    "imbalance": 0.4459,
+    "eta_int": 0.2071
+   }
   },
   {
    "id": "dpc",
@@ -432,7 +496,7 @@
    "family": "Density",
    "needs_k": true,
    "reference": true,
-   "created": "2026-11-15T07:58:28Z",
+   "created": "2026-11-15T09:54:00Z",
    "issue": null,
    "sigma": "0.6 [0.4, 0.6]",
    "alpha": "3 [1, 6]",
@@ -477,7 +541,15 @@
     ]
    },
    "suite_ari": 0.5114,
-   "wall_time_s": 3.2
+   "wall_time_s": 3.4,
+   "profile": {
+    "overlap": 0.3033,
+    "anisotropy": 0.3738,
+    "inter_density": 0.6121,
+    "intra_density": 0.9978,
+    "imbalance": 0.4875,
+    "eta_int": 0.899
+   }
   },
   {
    "id": "my-kmeans-1",
@@ -530,7 +602,15 @@
     ]
    },
    "suite_ari": 0.657,
-   "wall_time_s": 3.8
+   "wall_time_s": 3.8,
+   "profile": {
+    "overlap": 0.5172,
+    "anisotropy": 0.6815,
+    "inter_density": 0.6984,
+    "intra_density": 0.7893,
+    "imbalance": 0.8045,
+    "eta_int": 0.4414
+   }
   }
  ]
 }

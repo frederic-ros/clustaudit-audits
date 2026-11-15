@@ -19,7 +19,9 @@ from auditkit.issue import SubmissionError, method_source, parse_issue  # noqa: 
 from auditkit.label import read_labels, run_labels                 # noqa: E402
 from auditkit.method import InvalidOutput, as_labels, extra_requirements, read_info  # noqa: E402
 from auditkit.score import critical, score                         # noqa: E402
-from auditkit.site import badge_svg, publish, validate             # noqa: E402
+from auditkit.site import badge_svg, publish, rebuild_index, unpublish, validate  # noqa: E402
+from auditkit.schema import PROFILE_ORDER, note_of                  # noqa: E402
+from auditkit.views import VIEW_POINTS, build_views, view_entries, view_index  # noqa: E402
 
 BATTERY = str(ROOT / "battery" / "paper-v2.2")
 REF = ROOT / "methods" / "reference"
@@ -258,3 +260,49 @@ def test_browser_quick_test_harness():
     assert [round(p["ari"], 2) for p in res["panels"]] == [1.0, 0.72, 0.48]
     res = json.loads(ns["quicktest"]("def cluster(X, seed):\n    raise ValueError('no')", data, False))
     assert [c["ok"] for c in res["checks"]] == [True, False] and "line 2" in res["checks"][1]["detail"]
+
+
+# ------------------------------------------------------------------ notes per factor and views
+def test_notes_and_partitions_on_the_view_points(kmeans_labels):
+    a = score(BATTERY, str(kmeans_labels), read_info(REF / "kmeans.py"), "km")
+    prof = a["card"]["profile"]
+    assert list(prof) == PROFILE_ORDER
+    for g in PROFILE_ORDER:
+        means = a["sweeps"][g]["ari_mean"]
+        assert prof[g] == note_of(means) == a["sweeps"][g]["note"]
+        assert 0 <= prof[g] <= 1
+    assert round(prof["overlap"], 2) == 0.52 and round(prof["eta_int"], 2) == 0.44
+    lab = read_labels(str(kmeans_labels))
+    bat = Battery(BATTERY)
+    for g, v in a["views"].items():
+        assert len(v["labels"]) == len(GROUPS[g]["values"])
+        for i, l in zip(v["ids"], v["labels"]):
+            assert l == lab[i]["labels"][view_index(i, bat[i].n)].tolist()
+
+
+def test_shipped_battery_views_are_current():
+    shipped = json.loads((ROOT / "docs" / "data" / "battery.json").read_text(encoding="utf-8"))
+    fresh = build_views(BATTERY)
+    assert shipped == json.loads(json.dumps(fresh))
+    bat = Battery(BATTERY)
+    for g, es in view_entries(bat).items():
+        for e, d in zip(es, fresh["groups"][g]["datasets"]):
+            _, y = bat.load(e)
+            assert d["id"] == e.id and len(d["xy"]) == VIEW_POINTS
+            assert d["y"] == y[view_index(e.id, e.n)].tolist()
+
+
+def test_reindex_and_unpublish(tmp_path, kmeans_labels):
+    site = tmp_path / "site"
+    for aid in ("one-1", "two-2"):
+        a = score(BATTERY, str(kmeans_labels), read_info(REF / "kmeans.py"), aid)
+        p = tmp_path / f"{aid}.json"
+        p.write_text(json.dumps(a), encoding="utf-8")
+        publish(str(p), str(site), method_file=str(REF / "kmeans.py"))
+    assert len(rebuild_index(site)["audits"]) == 2
+    gone = unpublish("one-1", str(site))
+    assert len(gone) == 3
+    idx = json.loads((site / "audits" / "index.json").read_text(encoding="utf-8"))
+    assert [e["id"] for e in idx["audits"]] == ["two-2"] and idx["audits"][0]["profile"] == a["card"]["profile"]
+    with pytest.raises(ValueError):
+        unpublish("../x", str(site))

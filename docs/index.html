@@ -20,6 +20,7 @@
     </a>
     <nav class="site-nav" aria-label="Main">
       <a href="index.html#gallery">Audits</a>
+      <a href="battery.html">Battery</a>
       <a href="index.html#how">How it works</a>
       <a href="index.html#cite">Paper</a>
       <a href="https://github.com/frederic-ros/clustaudit">GitHub</a>
@@ -56,7 +57,7 @@
       <div class="steps">
         <div class="step"><span class="k">1 · Write one function</span><code>cluster(X, seed) → labels</code><p>About ten lines of Python around your method. Label −1 marks a point your method leaves unassigned.</p></div>
         <div class="step"><span class="k">2 · Quick test in your browser</span><p>Your code runs locally, on three small generated datasets. You see the clusters it finds and whether it passes the pre-audit. Nothing is uploaded.</p></div>
-        <div class="step"><span class="k">3 · Full audit, published</span><p>The fixed battery of the paper: the 75-dataset suite and six single-factor sweeps, 250 datasets. You receive an audit card to cite and a badge for your README.</p></div>
+        <div class="step"><span class="k">3 · Full audit, published</span><p>The fixed battery of the paper: the 75-dataset suite and six single-factor sweeps, 250 datasets (<a href="battery.html">see them</a>). You receive an audit card to cite and a badge for your README.</p></div>
       </div>
     </div>
   </section>
@@ -65,9 +66,12 @@
     <div class="row" style="justify-content:space-between;align-items:flex-end;gap:16px">
       <div class="stack" style="gap:6px">
         <h2>Reference audits</h2>
-        <p class="muted">Nine classical methods under the paper's battery, protocol F. Each card gives where the method breaks, and how.</p>
+        <p class="muted">Nine classical methods under the paper's battery, protocol F. Each card gives a note per factor, where the method breaks, and how.</p>
       </div>
-      <div id="family-filter" class="filters" role="group" aria-label="Filter by family"></div>
+      <div class="sortbar">
+        <div id="family-filter" class="filters" role="group" aria-label="Filter by family"></div>
+        <select class="ctl" id="sort" aria-label="Order of the cards"></select>
+      </div>
     </div>
     <div id="gallery-ref" class="grid3" aria-live="polite"><p class="tiny">Loading…</p></div>
     <h2 style="font-size:26px;margin-top:16px">Submitted audits</h2>

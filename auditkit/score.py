@@ -15,7 +15,9 @@ paper's Table 8 (analysis/make_paper_tables_v2.py):
   between clusters (eta_int = 1), at a total noise of 30%;
 * imbalance = mean ARI and mean smallest-cluster F1 at rho = 5;
 * failure at sigma_max = the most frequent failure mode at the largest overlap
-  ("declared" degenerate outputs are reported as "detectable").
+  ("declared" degenerate outputs are reported as "detectable");
+* note of a factor = mean inlier ARI over the levels of its sweep (0 to 1). There is
+  deliberately no overall score: a mean over factors would hide how a method fails.
 
 This module never imports the audited method. Runs that raised, exceeded the time
 limit, returned an invalid output or crashed are kept: their failure mode is "error"
@@ -33,8 +35,8 @@ import numpy as np
 from .battery import Battery, GROUPS
 from .label import read_labels
 from .method import MethodInfo
-
-SCHEMA = "clustaudit-audit/1"
+from .schema import SCHEMA, PROFILE_ORDER, note_of
+from .views import method_views
 THRESHOLD = 0.5
 MODES = ["ok", "silent", "declared", "error"]
 TIE_ORDER = ["silent", "declared", "error", "ok"]
@@ -122,6 +124,7 @@ def summarise_sweep(rows: List[Dict], group: str) -> Dict:
         for m in MODES:
             out["modes"][m].append(_num(np.mean([r["mode"] == m for r in at])))
     out["crit"] = critical(levels, seeds, ari)
+    out["note"] = note_of(out["ari_mean"])
     return out
 
 
@@ -231,6 +234,7 @@ def build_card(sw: Dict[str, Dict], n_runs: int, n_errors: int) -> Dict:
                        f"invalid output; they count as ARI 0.")
 
     return {
+        "profile": {g: sw[g]["note"] for g in PROFILE_ORDER},
         "sigma_crit": ov["crit"], "alpha_crit": an["crit"], "delta_crit": de["crit"],
         "noise": {"eta": 0.3, "distant": distant, "bridge": bridge},
         "imbalance": {"rho": rho, "ari": im_ari, "f1_min": im_f1},
@@ -249,7 +253,8 @@ def score(battery_root: str, labels_path: str, info: MethodInfo, audit_id: str,
     problems = bat.verify()
     if problems:
         raise ValueError("the battery does not match its manifest: " + "; ".join(problems[:5]))
-    rows = evaluate(bat, read_labels(labels_path))
+    labels = read_labels(labels_path)
+    rows = evaluate(bat, labels)
     sw = {g: summarise_sweep(rows, g) for g in GROUPS}
     n_err = sum(r["mode"] == "error" for r in rows)
     rm = run_meta or {}
@@ -273,6 +278,7 @@ def score(battery_root: str, labels_path: str, info: MethodInfo, audit_id: str,
         "card": build_card(sw, len(rows), n_err),
         "sweeps": sw,
         "suite": summarise_suite(rows),
+        "views": method_views(bat, labels),
         "rows": {"columns": ["id", "ARI", "F1", "mode", "n_found", "rejected", "seconds", "message"],
                  "data": [[r["id"], _num(r["ARI"], 6), _num(r["F1"], 6), r["mode"], r["n_found"], _num(r["rejected"], 3),
                            _num(r["seconds"], 3), r["message"]] for r in rows]},

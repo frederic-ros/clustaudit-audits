@@ -8,6 +8,9 @@ Publishing audits on the static site
 * ``methods/<id>.py``   the method file that was audited;
 * ``badge/<id>.svg``    a README badge;
 * ``audits/index.json`` the gallery index, rebuilt from every audit present.
+
+``rebuild_index`` and ``unpublish`` need the standard library only (the Pages workflow
+rebuilds the index before each deployment).
 """
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from .score import SCHEMA
+from .schema import INDEX_SCHEMA, PROFILE_ORDER, SCHEMA, note_of
 
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,60}$")
 
@@ -65,6 +68,7 @@ def badge_svg(a: Dict) -> str:
 
 def index_entry(a: Dict) -> Dict:
     c, s = a["card"], a["sweeps"]
+    prof = c.get("profile") or {g: note_of(s[g]["ari_mean"]) for g in PROFILE_ORDER}
     return {
         "id": a["id"], "name": a["method"]["name"], "family": a["method"]["family"],
         "needs_k": a["method"]["needs_k"], "reference": bool(a["method"].get("reference_audit")),
@@ -74,6 +78,7 @@ def index_entry(a: Dict) -> Dict:
         "overlap": {"values": s["overlap"]["values"], "ari": s["overlap"]["ari_mean"]},
         "eta_int": {"values": s["eta_int"]["values"], "ari": s["eta_int"]["ari_mean"]},
         "suite_ari": a["suite"]["ari_mean"], "wall_time_s": a.get("run", {}).get("wall_time_s"),
+        "profile": prof,
     }
 
 
@@ -94,9 +99,24 @@ def rebuild_index(site: Path) -> Dict:
     # submitted audits: most recent first
     ref = [e for e in entries if e["reference"]]
     sub = sorted([e for e in entries if not e["reference"]], key=lambda e: e["created"], reverse=True)
-    idx = {"schema": "clustaudit-audit-index/1", "battery": "paper-v2.2", "audits": ref + sub}
+    idx = {"schema": INDEX_SCHEMA, "battery": "paper-v2.2", "audits": ref + sub}
     (site / "audits" / "index.json").write_text(json.dumps(idx, ensure_ascii=False, indent=1), encoding="utf-8")
     return idx
+
+
+def unpublish(audit_id: str, site: str = "docs") -> List[str]:
+    """Remove an audit from the site (card, badge, method file) and rebuild the index."""
+    if not ID_RE.match(audit_id):
+        raise ValueError("invalid audit id")
+    site_p = Path(site)
+    gone = []
+    for p in (site_p / "audits" / f"{audit_id}.json", site_p / "badge" / f"{audit_id}.svg",
+              site_p / "methods" / f"{audit_id}.py"):
+        if p.exists():
+            p.unlink()
+            gone.append(str(p))
+    rebuild_index(site_p)
+    return gone
 
 
 def publish(audit_path: str, site: str = "docs", method_file: Optional[str] = None,

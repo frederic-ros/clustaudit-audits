@@ -5,6 +5,14 @@
   const SVGNS = 'http://www.w3.org/2000/svg';
   const C = { c1: '#2853C7', c2: '#C2660E', c3: '#00897B', c4: '#9B4DCA', ref: '#8A93A6', grid: '#E1E5EC', axis: '#C9D0DB' };
   const ID_RE = /^[a-z0-9][a-z0-9-]{0,60}$/;
+  const CL = ['#2853C7', '#C2660E', '#00897B', '#9B4DCA', '#B8336A'];   // true clusters (validated palette)
+  const OTHER = '#C4CAD4', NOISE = '#9AA3B2';
+  const ORDER = ['overlap', 'anisotropy', 'inter_density', 'intra_density', 'imbalance', 'eta_int'];
+  const SYM = { overlap: 'σ', anisotropy: 'α', inter_density: 'δ', intra_density: 'κ', imbalance: 'ρ', eta_int: 'η_int' };
+  const LABEL = { overlap: 'Overlap', anisotropy: 'Elongation', inter_density: 'Density heterogeneity', intra_density: 'Dense cores', imbalance: 'Size imbalance', eta_int: 'Noise placement' };
+  const lvl = (k, v) => k === 'eta_int' ? Math.round(v * 100) + '% between' : (typeof v === 'number' ? `${SYM[k]} = ${+v.toFixed(3)}` : String(v));
+  const noteOf = vals => vals.reduce((t, v) => t + Math.min(1, Math.max(0, v ?? 0)), 0) / vals.length;
+  const profileOf = a => (a.card && a.card.profile) || Object.fromEntries(ORDER.map(k => [k, noteOf(a.sweeps[k].ari_mean)]));
 
   function el(tag, attrs, ...kids) {
     const n = document.createElement(tag);
@@ -156,6 +164,81 @@
       el('tbody', {}, rows.map(r => el('tr', {}, r.map((c, i) => el('td', { class: (numCols || []).includes(i) ? 'num' : null, text: c }))))));
   }
 
+  /* ------------------------------------------------------------ profile of notes */
+  function profileMini(prof, name) {
+    const W = 200, H = 74, bw = 18, gap = (W - 16 - 6 * bw) / 5, base = 52;
+    const svg = sv('svg', { class: 'spark', viewBox: `0 0 ${W} ${H}`, role: 'img',
+      'aria-label': `Notes of ${name}: ` + ORDER.map(k => `${LABEL[k]} ${f2(prof[k])}`).join(', ') });
+    svg.append(sv('line', { x1: 6, x2: W - 6, y1: base, y2: base, stroke: C.axis }));
+    ORDER.forEach((k, i) => {
+      const x = 8 + i * (bw + gap), h = Math.max(1.5, (prof[k] ?? 0) * 44);
+      const r = Math.min(4, h / 2);
+      svg.append(sv('path', { d: `M${x},${base} v${-(h - r)} q0,${-r} ${r},${-r} h${bw - 2 * r} q${r},0 ${r},${r} v${h - r} z`, fill: C.c1 },
+        sv('title', {}, `${LABEL[k]}: ${f2(prof[k])}`)));
+      svg.append(sv('text', { x: x + bw / 2, y: H - 6, 'text-anchor': 'middle', class: 'lbl', 'font-size': 11, fill: '#4A5263' }, SYM[k].replace('_int', '')));
+    });
+    return svg;
+  }
+
+  function profileBars(a, other) {
+    const prof = profileOf(a), op = other ? profileOf(other) : null;
+    const rows = ORDER.map(k => {
+      const s = a.sweeps[k];
+      const bar = (v, color, thin) => el('div', { class: 'pbar' + (thin ? ' thin' : '') },
+        el('span', { style: `width:${Math.max(0.5, (v ?? 0) * 100)}%;background:${color}` }), el('b', { text: f2(v) }));
+      return el('div', { class: 'prow' },
+        el('div', { class: 'plabel' }, el('span', { text: `${LABEL[k]} (${SYM[k]})` }), el('small', { text: 'critical level ' + s.crit.text })),
+        el('div', { class: 'pbars' }, bar(prof[k], C.c1), op ? bar(op[k], C.c2, true) : null));
+    });
+    const series = [{ name: a.method.name, color: C.c1 }].concat(other ? [{ name: other.method.name, color: C.c2 }] : []);
+    return el('div', { class: 'stack', style: 'gap:10px' },
+      other ? el('div', { class: 'legend' }, series.map(x => el('span', {}, sv('svg', { viewBox: '0 0 14 10', width: 14, height: 10, 'aria-hidden': 'true' }, sv('rect', { width: 14, height: 10, rx: 2, fill: x.color })), x.name))) : null,
+      el('div', { class: 'profile', role: 'list' }, rows));
+  }
+
+  /* ------------------------------------------------------------ 2-D views of datasets */
+  function viewDomain(xy, y) {
+    const pts = xy.filter((_, i) => y[i] >= 0);
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    let [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    const pad = 0.12 * Math.max(x1 - x0, y1 - y0, 1e-6);
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, half = Math.max(x1 - x0, y1 - y0) / 2 + pad;
+    return [cx - half, cx + half, cy - half, cy + half];
+  }
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  function matchColours(y, lab) {
+    // a found cluster takes the colour of the true cluster it mostly covers, largest clusters first
+    const size = {}, cover = {};
+    lab.forEach((c, i) => { if (c < 0) return; size[c] = (size[c] || 0) + 1; if (y[i] >= 0) { cover[c] = cover[c] || {}; cover[c][y[i]] = (cover[c][y[i]] || 0) + 1; } });
+    const taken = new Set(), col = {};
+    Object.keys(size).sort((a, b) => size[b] - size[a]).forEach(c => {
+      const best = Object.entries(cover[c] || {}).sort((a, b) => b[1] - a[1])[0];
+      if (best && !taken.has(best[0]) && +best[0] < CL.length) { taken.add(best[0]); col[c] = CL[+best[0]]; } else col[c] = OTHER;
+    });
+    return col;
+  }
+  function clusterView(xy, y, lab, o) {
+    o = o || {};
+    const W = o.size || 220, pad = 6, [x0, x1, y0, y1] = viewDomain(xy, y);
+    const X = v => pad + (Math.min(x1, Math.max(x0, v)) - x0) / (x1 - x0) * (W - 2 * pad);
+    const Y = v => W - pad - (Math.min(y1, Math.max(y0, v)) - y0) / (y1 - y0) * (W - 2 * pad);
+    const out = (p) => p[0] < x0 || p[0] > x1 || p[1] < y0 || p[1] > y1;
+    const svg = sv('svg', { viewBox: `0 0 ${W} ${W}`, role: 'img', 'aria-label': o.aria || '', class: 'view' });
+    const col = lab ? matchColours(y, lab) : null;
+    const r = o.r || 3;
+    // the points are stored cluster by cluster: draw them in a fixed shuffled order, so that
+    // overlapping clusters mix in the picture instead of the last one covering the others
+    const n = xy.length, step = [7919, 104729, 1299709].find(q => n % q !== 0 && gcd(q, n) === 1) || 1;
+    const order = Array.from({ length: n }, (_, k) => (k * step) % n);
+    order.forEach(i => { const p = xy[i];
+      const c = lab ? lab[i] : y[i], far = out(p), rr = far ? r * 0.7 : r;
+      if (c < 0) svg.append(lab ? sv('circle', { cx: X(p[0]), cy: Y(p[1]), r: rr, fill: 'none', stroke: '#8A93A6', 'stroke-width': 1 })
+                                : sv('circle', { cx: X(p[0]), cy: Y(p[1]), r: rr * 0.8, fill: NOISE, 'fill-opacity': 0.8 }));
+      else svg.append(sv('circle', { cx: X(p[0]), cy: Y(p[1]), r: rr, fill: lab ? col[c] : (CL[c] || OTHER), 'fill-opacity': 0.88, stroke: '#fff', 'stroke-width': 0.6 }));
+    });
+    return svg;
+  }
+
   /* ------------------------------------------------------------ home page */
   async function home() {
     let idx;
@@ -176,11 +259,19 @@
     }
     const fams = ['All', 'Centroid', 'Connectivity', 'Density', 'Graph', 'Deep', 'Other'].filter(f => f === 'All' || idx.audits.some(a => a.family === f));
     const filt = document.getElementById('family-filter');
+    const sortSel = document.getElementById('sort');
     let current = 'All';
+    if (sortSel) {
+      sortSel.replaceChildren(el('option', { value: '', text: 'Order: reference' }),
+        ...ORDER.map(k => el('option', { value: k, text: `Note: ${LABEL[k]} (${SYM[k]})` })));
+      sortSel.addEventListener('change', () => render());
+    }
     const render = () => {
+      const key = sortSel ? sortSel.value : '';
       for (const [hostId, ref] of [['gallery-ref', true], ['gallery-sub', false]]) {
         const host = document.getElementById(hostId);
-        const list = idx.audits.filter(a => a.reference === ref && (current === 'All' || a.family === current));
+        let list = idx.audits.filter(a => a.reference === ref && (current === 'All' || a.family === current));
+        if (key) list = list.slice().sort((p, q) => ((q.profile || {})[key] ?? -1) - ((p.profile || {})[key] ?? -1));
         host.replaceChildren(...(list.length ? list.map(card) : [el('p', { class: 'empty', text: ref ? 'No reference audit in this family.' : 'No submitted audit yet. Test your method and launch the first one.' })]));
       }
     };
@@ -193,7 +284,8 @@
   function card(a) {
     return el('article', { class: 'card mcard' },
       el('div', { class: 'top' }, el('h3', { text: a.name }), el('span', { class: 'tiny', text: a.family })),
-      el('div', { class: 'stack', style: 'gap:4px' }, sparkline(a.overlap.ari), el('span', { class: 'tiny', text: `Inlier ARI as overlap grows, σ from ${g(a.overlap.values[0])} to ${g(a.overlap.values.at(-1))}` })),
+      el('div', { class: 'stack', style: 'gap:4px' }, a.profile ? profileMini(a.profile, a.name) : sparkline(a.overlap.ari),
+        el('span', { class: 'tiny', text: a.profile ? 'Notes per factor: mean inlier ARI over each sweep, 0 to 1' : `Inlier ARI as overlap grows, σ from ${g(a.overlap.values[0])} to ${g(a.overlap.values.at(-1))}` })),
       el('dl', { class: 'kv' },
         el('dt', { text: 'Overlap: breaks at' }), el('dd', { text: 'σ ' + critShort(a.sigma) }),
         el('dt', { text: 'Elongation: breaks at' }), el('dd', { text: 'α ' + critShort(a.alpha) }),
@@ -247,10 +339,12 @@
       el('option', { value: '', text: 'Compare with…' }),
       idx.audits.filter(x => x.id !== id).map(x => el('option', { value: x.id, text: x.name + (x.reference ? '' : ' (submitted)') })));
     const charts = el('div', { class: 'charts3' });
+    const profHost = el('div');
     const cache = {};
     async function drawCharts(cmpId) {
       let other = null;
       if (cmpId) { try { other = cache[cmpId] || (cache[cmpId] = await getJSON(`audits/${cmpId}.json`)); } catch (e) { other = null; } }
+      profHost.replaceChildren(profileBars(a, other));
       const me = a.method.name;
       const ov = [{ name: me + ' · ARI', values: sw.overlap.ari_mean, color: C.c1 },
                   { name: me + ' · smallest-cluster F1', values: sw.overlap.f1_mean, color: C.c1, dash: '6 4', hollow: true }];
@@ -270,6 +364,11 @@
     }
     cmpSel.addEventListener('change', () => drawCharts(cmpSel.value));
     await drawCharts('');
+
+    let bviews = null;
+    try { bviews = await getJSON('data/battery.json'); } catch (e) { bviews = null; }
+    const rowsById = Object.fromEntries(a.rows.data.map(r => [r[0], Object.fromEntries(a.rows.columns.map((c, i) => [c, r[i]]))]));
+    const viewerBox = bviews ? viewer(a, bviews, rowsById) : el('p', { class: 'tiny', text: 'The views of the battery could not be loaded.' });
 
     const reading = el('section', { class: 'card reading', 'aria-labelledby': 'h-read' }, el('h2', { id: 'h-read', style: 'font-size:24px', text: 'What the audit says' }),
       el('ul', {}, cd.reading.map(r => el('li', { text: r }))));
@@ -330,9 +429,15 @@
 
     main.replaceChildren(head,
       el('div', { class: 'stack', style: 'gap:16px;margin-top:28px' }, tiles),
+      el('section', { class: 'card reading', style: 'margin-top:16px', 'aria-labelledby': 'h-prof' },
+        el('div', { class: 'row', style: 'justify-content:space-between' },
+          el('h2', { id: 'h-prof', style: 'font-size:22px', text: 'Notes per factor' }), modeChip(cd.failure.mode, cd.failure.fraction)),
+        el('p', { class: 'tiny', text: 'Note = mean inlier ARI over the levels of each sweep, from 0 to 1 (five seeds per level). There is deliberately no overall score: an average over factors would hide how the method fails. "Compare with…" below adds a second method.' }),
+        profHost),
       el('div', { class: 'row', style: 'justify-content:space-between;margin-top:32px' }, el('h2', { style: 'font-size:26px', text: 'Three sweeps behind the card' }), cmpSel),
       el('div', { style: 'margin-top:14px' }, charts),
       el('div', { style: 'margin-top:20px' }, reading),
+      el('div', { style: 'margin-top:20px' }, viewerBox),
       el('h2', { style: 'font-size:26px;margin-top:40px', text: 'Every sweep' }),
       el('p', { class: 'muted small', style: 'margin:6px 0 14px', text: 'Mean inlier ARI over five seeds, with the range over seeds; the vertical line marks the critical level.' }),
       multiples,
@@ -340,10 +445,75 @@
       el('div', { class: 'stack', style: 'margin-top:16px' }, numbers, runs));
   }
 
+  /* ------------------------------------------------------------ see where it breaks */
+  function viewer(a, bv, rowsById) {
+    const box = el('section', { class: 'card reading', 'aria-labelledby': 'h-view' });
+    const tabs = el('div', { class: 'filters', role: 'group', 'aria-label': 'Factor' });
+    const slider = el('input', { type: 'range', min: 0, max: 0, step: 1, value: 0, class: 'range', 'aria-label': 'Level of the factor' });
+    const lvlText = el('strong', { class: 'lvl' });
+    const panels = el('div', { class: 'grid2' });
+    const stats = el('p', { class: 'small muted' });
+    const trend = el('div');
+    const hasViews = !!a.views;
+    let key = 'overlap';
+    function draw() {
+      const g = bv.groups[key], i = +slider.value, d = g.datasets[i];
+      const mv = hasViews && a.views[key] ? a.views[key].labels[i] : null;
+      const r = rowsById[d.id] || {};
+      const s = a.sweeps[key];
+      lvlText.textContent = lvl(key, d.value) + `  ·  level ${i + 1} of ${g.datasets.length}`;
+      const truth = el('figure', { class: 'panel' }, clusterView(d.xy, d.y, null, { aria: `True clusters at ${lvl(key, d.value)}` }),
+        el('figcaption', { class: 'small', text: `True clusters · difficulty D = ${d.D === null ? 'n/a' : d.D.toFixed(2)}` }));
+      const found = el('figure', { class: 'panel' },
+        mv ? clusterView(d.xy, d.y, mv, { aria: `Partition of ${a.method.name} at ${lvl(key, d.value)}` })
+           : el('div', { class: 'empty', text: hasViews ? 'This run produced no partition (error or time limit).' : 'This audit was published before partitions were stored: re-run it to see them.' }),
+        el('figcaption', { class: 'small', text: `${a.method.name} · ARI ${f2(r.ARI)} on this dataset` }));
+      panels.replaceChildren(truth, found);
+      const mode = r.mode === 'declared' ? 'detectable failure' : r.mode === 'silent' ? 'silent failure' : r.mode === 'error' ? 'error' : 'recovered (ARI ≥ 0.3)';
+      stats.textContent = `Seed 42: ${mode}, ${r.n_found ?? '–'} cluster(s) found, ${r.rejected === null || r.rejected === undefined ? '–' : Math.round(r.rejected * 100) + '%'} of the points left unassigned. Mean ARI over the five seeds at this level: ${f2(s.ari_mean[i])}.`;
+      trend.replaceChildren(lineChart({ x: s.values, series: [{ name: 'mean ARI', values: s.ari_mean, color: C.c1 }], marker: i, width: 760, height: 150, xName: SYM[key],
+        xFmt: key === 'eta_int' ? (v => Math.round(v * 100) + '%') : null, aria: `${LABEL[key]}: mean ARI per level, current level ${i + 1}` }));
+    }
+    function select(k) {
+      key = k;
+      tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
+      slider.max = bv.groups[k].datasets.length - 1;
+      const c = a.sweeps[k].crit.mean;
+      const ci = typeof c === 'number' ? a.sweeps[k].values.indexOf(c) : -1;
+      slider.value = ci > 0 ? ci : 0;
+      draw();
+    }
+    tabs.append(...ORDER.map(k => el('button', { type: 'button', 'data-k': k, 'aria-pressed': 'false', text: `${LABEL[k]} (${SYM[k]})`, onclick: () => select(k) })));
+    slider.addEventListener('input', draw);
+    box.append(el('h2', { id: 'h-view', style: 'font-size:24px', text: 'See where it breaks' }),
+      el('p', { class: 'tiny', text: `Each level of a sweep, drawn from 300 points of the seed-42 dataset: on the left the true clusters (grey: noise), on the right the clusters ${a.method.name} returned, coloured after the true cluster they mostly cover (light grey: further clusters, open circles: points left unassigned). 2-D view: ${bv.projection} of the 20-D data. The slider starts at the critical level.` }),
+      tabs, el('div', { class: 'row' }, slider, lvlText), panels, stats, trend);
+    select('overlap');
+    return box;
+  }
+
+  /* ------------------------------------------------------------ battery page */
+  async function batteryPage() {
+    const host = document.getElementById('battery');
+    let bv, idx;
+    try { bv = await getJSON('data/battery.json'); } catch (e) { host.replaceChildren(el('p', { class: 'empty', text: 'The views of the battery could not be loaded.' })); return; }
+    const sections = ['suite'].concat(ORDER).map(k => {
+      const gr = bv.groups[k];
+      return el('section', { class: 'card reading', 'aria-labelledby': 'b-' + k },
+        el('h2', { id: 'b-' + k, style: 'font-size:22px', text: gr.symbol ? `${gr.label} (${gr.symbol})` : gr.label }),
+        el('p', { class: 'small muted', text: gr.what.charAt(0).toUpperCase() + gr.what.slice(1) + '.' }),
+        el('div', { class: 'thumbs' }, gr.datasets.map(d => el('figure', { class: 'thumb' },
+          clusterView(d.xy, d.y, null, { size: 160, r: 2.4, aria: `${gr.label}, ${k === 'suite' ? d.value : lvl(k, d.value)}` }),
+          el('figcaption', {}, el('strong', { text: k === 'suite' ? d.value : lvl(k, d.value) }), el('span', { text: `D = ${d.D === null ? 'n/a' : d.D.toFixed(2)}` }))))));
+    });
+    host.replaceChildren(...sections);
+  }
+
   window.CA = { el, sv, f2, g, getJSON, config, lineChart, scatter, legend, lineKey, table, C };
   document.addEventListener('DOMContentLoaded', () => {
     const p = document.body.dataset.page;
     if (p === 'home') home();
     if (p === 'audit') auditPage();
+    if (p === 'battery') batteryPage();
   });
 })();

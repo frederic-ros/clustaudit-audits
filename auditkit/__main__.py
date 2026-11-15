@@ -8,6 +8,9 @@ auditkit command line
     python -m auditkit score  labels.npz --method my_method.py --id my-method --out my.json
     python -m auditkit show   my.json                      # the card in the terminal
     python -m auditkit publish my.json --site docs         # add to the site (index, badge)
+    python -m auditkit unpublish my-method-12 --site docs  # remove an audit from the site
+    python -m auditkit reindex --site docs                 # rebuild docs/audits/index.json
+    python -m auditkit views --out docs/data/battery.json  # 2-D views of the battery
     python -m auditkit from-issue --body-file body.md --out submission/
     python -m auditkit requirements my_method.py           # extra packages to install
     python -m auditkit battery build --suite ../clustaudit/datasets/suite
@@ -83,6 +86,27 @@ def cmd_publish(a):
     return 0
 
 
+def cmd_unpublish(a):
+    from .site import unpublish
+    gone = unpublish(a.id, a.site)
+    print("\n".join(gone) if gone else f"nothing to remove for {a.id}")
+    return 0
+
+
+def cmd_reindex(a):
+    from .site import rebuild_index
+    idx = rebuild_index(Path(a.site))
+    print(f"{len(idx['audits'])} audits in {a.site}/audits/index.json")
+    return 0
+
+
+def cmd_views(a):
+    from .views import build_views
+    v = build_views(a.battery, a.out)
+    print(f"{sum(len(g['datasets']) for g in v['groups'].values())} views -> {a.out}")
+    return 0
+
+
 def cmd_from_issue(a):
     from .issue import parse_issue, write_submission
     body = Path(a.body_file).read_text(encoding="utf-8") if a.body_file else os.environ.get(a.body_env, "")
@@ -149,6 +173,15 @@ def main(argv=None):
     p.add_argument("audit"); p.add_argument("--site", default="docs")
     p.add_argument("--method-file"); p.add_argument("--issue", type=int)
     p.set_defaults(func=cmd_publish)
+
+    p = sub.add_parser("unpublish", help="remove an audit from the static site")
+    p.add_argument("id"); p.add_argument("--site", default="docs"); p.set_defaults(func=cmd_unpublish)
+
+    p = sub.add_parser("reindex", help="rebuild the gallery index from the audits present")
+    p.add_argument("--site", default="docs"); p.set_defaults(func=cmd_reindex)
+
+    p = common(sub.add_parser("views", help="2-D views of the battery for the site"), method=False)
+    p.add_argument("--out", default="docs/data/battery.json"); p.set_defaults(func=cmd_views)
 
     p = sub.add_parser("from-issue", help="extract a submission from a GitHub issue body")
     p.add_argument("--body-file"); p.add_argument("--body-env", default="ISSUE_BODY")

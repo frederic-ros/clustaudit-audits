@@ -71,6 +71,17 @@ the noise distant and all of it between clusters; imbalance is the ARI and the
 smallest-cluster F1 at ρ = 5; the failure mode is the most frequent one at the largest
 overlap. Runs are evaluated with clustaudit's own `evaluate_run`.
 
+**Notes per factor.** Each card also gives one note per factor: the mean inlier ARI over
+the levels of its sweep (0 to 1), shown as a profile next to the failure mode. There is
+deliberately no overall score: an average over factors would rank methods while hiding
+how they fail, which is what the audit is about.
+
+**What the tests look like.** `docs/battery.html` draws every level of every sweep (seed
+42, 300 points, 2-D linear discriminant view fitted on the true clusters;
+`python -m auditkit views` rebuilds `docs/data/battery.json`). Each audit stores the
+method's labels on the same points, and its page shows, level by level, the true
+clusters next to the partition the method returned ("See where it breaks").
+
 **Reproduction of the paper.** The reference methods, run by auditkit as submissions,
 give the paper's results run by run: 2,205 runs compared, identical ARI (up to the
 6-decimal rounding of `audit.json`) and identical failure mode, and the nine cards equal
@@ -79,7 +90,7 @@ Table 8 (DPC, which the paper did not run on the anisotropy sweep, gets an α va
 ```bash
 python scripts/reference_audits.py --jobs 4      # rebuild docs/audits for the nine methods
 python scripts/compare_with_paper.py --results ../clustaudit/benchmarks/classical/results
-python -m pytest -q tests                        # 15 tests, about one minute
+python -m pytest -q tests                        # 18 tests, about one minute
 ```
 
 ## The public service
@@ -114,6 +125,13 @@ in the untrusted job could otherwise poison a cache restored by a trusted job.
    account, project sites are served under it, e.g. `https://frederic-ros.com/clustaudit-audits/`)
    and the Pyodide version.
 
+### Maintenance commands
+
+```bash
+python -m auditkit unpublish my-method-12   # remove a card (and its badge and method file), rebuild the index
+python -m auditkit reindex                  # rebuild docs/audits/index.json (the Pages workflow does it too)
+```
+
 ### Running an audit (maintainers)
 
 Open the issue, read the code as it is at that moment, add the label `audit`. The run
@@ -123,10 +141,10 @@ run it again (after the author edited the issue), remove the label and add it ag
 ## Layout
 
 ```
-auditkit/        battery.py  method.py  check.py  label.py  score.py  card_text.py  site.py  issue.py  __main__.py
+auditkit/        battery.py  method.py  check.py  label.py  score.py  views.py  schema.py  card_text.py  site.py  issue.py  __main__.py
 battery/         paper-v2.2/manifest.json + 250 .npz (content SHA-256 in the manifest)
 methods/         reference/*.py (K-Means, GMM, Spectral, Ward, Average, DBSCAN, HDBSCAN, OPTICS, Density peaks)
-docs/            index.html  test.html  audit.html  assets/  audits/  badge/  methods/  data/quicktest.json  config.json
+docs/            index.html  battery.html  test.html  audit.html  assets/  audits/  badge/  methods/  data/  config.json
 scripts/         reference_audits.py  compare_with_paper.py  ci_publish.py  build_quicktest.py
 tests/           test_auditkit.py
 ```

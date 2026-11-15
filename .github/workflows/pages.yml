@@ -28,6 +28,8 @@ jobs:
         with:
           # called from the Audit workflow, the event's commit predates the new card
           ref: ${{ github.event.repository.default_branch }}
+      - name: Rebuild the gallery index from the audits present
+        run: python3 -m auditkit reindex --site docs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
