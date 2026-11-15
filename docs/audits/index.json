@@ -478,6 +478,59 @@
    },
    "suite_ari": 0.5114,
    "wall_time_s": 3.2
+  },
+  {
+   "id": "my-kmeans-1",
+   "name": "my-kmeans",
+   "family": "Centroid",
+   "needs_k": true,
+   "reference": false,
+   "created": "2026-11-15T09:25:47Z",
+   "issue": 1,
+   "sigma": "1 [0.8, 1]",
+   "alpha": "8 [5, >max]",
+   "delta": ">max [0.75, >max]",
+   "f1": 0.0613,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.7148,
+     0.7801,
+     0.6691,
+     0.6025,
+     0.3797,
+     0.2663,
+     0.2079
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0419,
+     0.0747,
+     0.5179,
+     0.5724,
+     1.0
+    ]
+   },
+   "suite_ari": 0.657,
+   "wall_time_s": 3.8
   }
  ]
 }
