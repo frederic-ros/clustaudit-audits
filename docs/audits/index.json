@@ -557,7 +557,7 @@
    "family": "Centroid",
    "needs_k": true,
    "reference": false,
-   "created": "2026-11-15T09:25:47Z",
+   "created": "2026-11-15T11:16:26Z",
    "issue": 1,
    "sigma": "1 [0.8, 1]",
    "alpha": "8 [5, >max]",
