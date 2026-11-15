@@ -109,8 +109,10 @@ in the untrusted job could otherwise poison a cache restored by a trusted job.
    (added by the form).
 4. *Actions → Pages → Run workflow* once: the site goes online at
    `https://<owner>.github.io/<repo>/`.
-5. If the repository is not `frederic-ros/clustaudit-audits`, the site detects the owner and
-   name from its address; `docs/config.json` sets them otherwise (and the Pyodide version).
+5. `docs/config.json` holds the repository name, the public address of the site
+   (`site_url`, used in the issue comments and badges; with a custom domain on the
+   account, project sites are served under it, e.g. `https://frederic-ros.com/clustaudit-audits/`)
+   and the Pyodide version.
 
 ### Running an audit (maintainers)
 

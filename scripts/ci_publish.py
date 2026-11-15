@@ -43,6 +43,19 @@ def output(**kv):
     print("\n".join(lines))
 
 
+def site_address(repo: str) -> str:
+    """Public address of the site: docs/config.json "site_url" if set (custom domain),
+    else https://<owner>.github.io/<repo>/."""
+    try:
+        u = json.loads((HERE.parent / "docs" / "config.json").read_text(encoding="utf-8")).get("site_url", "").strip()
+        if u:
+            return u if u.endswith("/") else u + "/"
+    except Exception:
+        pass
+    owner, _, name = repo.partition("/")
+    return f"https://{owner}.github.io/{name}/" if owner and name else ""
+
+
 def check_report(untrusted: Path) -> str:
     p = untrusted / "check.json"
     if not p.exists():
@@ -120,8 +133,7 @@ def main():
         return 0
     (work / "audit.json").write_text(json.dumps(audit, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
-    owner, _, repo = a.repo.partition("/")
-    site = f"https://{owner}.github.io/{repo}/" if owner and repo else ""
+    site = site_address(a.repo)
     body = [f"## Audit card: {safe(sub['name'], 60)}", "", render(audit, markdown=True).replace("@", "@​"), ""]
     if site:
         body += [f"Card page: {site}audit.html?id={aid} (online once the site has been redeployed, about a minute).",
