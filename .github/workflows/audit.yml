@@ -17,8 +17,11 @@ on:
 
 permissions: {}
 
+# One audit at a time per issue. The label name is part of the group, so that adding another
+# label (audit-request, ...) to the issue never cancels a running audit; adding `audit`
+# again restarts it.
 concurrency:
-  group: audit-${{ github.event.issue.number }}
+  group: audit-${{ github.event.issue.number }}-${{ github.event.label.name }}
   cancel-in-progress: true
 
 jobs:
