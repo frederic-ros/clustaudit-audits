@@ -1,0 +1,132 @@
+# Runs the battery on a submitted method when a maintainer adds the label `audit` to an
+# "Audit request" issue, then publishes the audit card.
+#
+# Security model (do not weaken it):
+# * the job `run` executes the submitted code: it has NO token permission, no secret,
+#   no credentials in its checkout, and its only output is an artifact of labels;
+# * the job `publish` has write access and NEVER executes submitted code: it re-reads the
+#   method from the issue as text, reads the labels with numpy (no pickle) and scores them
+#   with clustaudit against its own copy of the battery;
+# * no workflow of this repository uses a cache (actions/cache, setup-python `cache:`):
+#   code running in `run` could otherwise poison a cache restored by a trusted job.
+name: Audit
+
+on:
+  issues:
+    types: [labeled]
+
+permissions: {}
+
+concurrency:
+  group: audit-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  run:
+    if: github.event.label.name == 'audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions: {}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the runner environment
+        run: python -m pip install -r requirements-runner.txt
+      - name: Read the submission from the issue
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python -m auditkit from-issue --body-env ISSUE_BODY --number "$ISSUE_NUMBER" --out submission
+      - name: Install the method's requirements
+        run: |
+          python -m auditkit requirements submission/method.py > submission/requirements.txt
+          if [ -s submission/requirements.txt ]; then python -m pip install -r submission/requirements.txt; fi
+      - name: Pre-audit
+        run: python -m auditkit check submission/method.py --report submission/check.json
+      - name: Run the method on the battery (250 datasets)
+        run: python -m auditkit label submission/method.py --out submission/labels.npz --jobs 4 --timeout 300
+      - name: Hand the labels over
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: submission
+          path: submission/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  publish:
+    needs: run
+    if: always() && github.event.label.name == 'audit'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      issues: write
+    outputs:
+      published: ${{ steps.score.outputs.published }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the scoring environment
+        run: python -m pip install -r requirements.txt
+      - name: Fetch the labels (untrusted data)
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: submission
+          path: ${{ runner.temp }}/untrusted
+      - name: Score
+        id: score
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_RESULT: ${{ needs.run.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: >
+          python scripts/ci_publish.py --number "$ISSUE_NUMBER" --run-result "$RUN_RESULT" --run-url "$RUN_URL"
+          --repo "$REPO" --untrusted "$RUNNER_TEMP/untrusted" --work "$RUNNER_TEMP/work"
+      - name: Commit the audit card
+        if: steps.score.outputs.published == 'true'
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          AUDIT_ID: ${{ steps.score.outputs.id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            git fetch origin "$GITHUB_REF_NAME" && git reset --hard "origin/$GITHUB_REF_NAME"
+            python -m auditkit publish "$RUNNER_TEMP/work/audit.json" --site docs \
+              --method-file "$RUNNER_TEMP/work/method.py" --issue "$ISSUE_NUMBER"
+            git add docs
+            git diff --cached --quiet && exit 0
+            git commit -m "Audit card $AUDIT_ID (issue #$ISSUE_NUMBER)"
+            git push origin "HEAD:$GITHUB_REF_NAME" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
+      - name: Report in the issue
+        if: always() && steps.score.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          if [ -f "$RUNNER_TEMP/work/comment.md" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/work/comment.md"
+          fi
+          gh issue edit "$ISSUE_NUMBER" --remove-label audit || true
+
+  deploy:
+    needs: publish
+    if: needs.publish.outputs.published == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml

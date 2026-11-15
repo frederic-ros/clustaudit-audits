@@ -1,0 +1,4 @@
+*.npz binary
+battery/**/manifest.json -text
+docs/audits/*.json -text
+*.sh text eol=lf

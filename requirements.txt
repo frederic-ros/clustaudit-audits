@@ -1,0 +1,7 @@
+# Scoring and local audits: the verification environment of clustaudit 2.2.0 (Python 3.12/3.13).
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.5
+scikit-learn==1.9.1
+threadpoolctl>=3.1
+clustaudit @ git+https://github.com/frederic-ros/clustaudit@v2.2.0

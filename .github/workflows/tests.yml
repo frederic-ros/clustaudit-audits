@@ -1,0 +1,28 @@
+# Tests of auditkit and a full re-audit of two reference methods, compared with the
+# published cards. Runs on pushes and pull requests that touch the code.
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/audits/**", "docs/badge/**", "docs/methods/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements.txt pytest
+      - name: Battery matches its manifest
+        run: python -m auditkit battery verify
+      - name: Unit and integration tests
+        run: python -m pytest -q tests

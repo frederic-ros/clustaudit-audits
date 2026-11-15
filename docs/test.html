@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>clustaudit · test your method</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='9' cy='10' r='4' fill='%232853C7'/%3E%3Ccircle cx='19' cy='9' r='3' fill='%232853C7' opacity='.55'/%3E%3Ccircle cx='14' cy='19' r='5' fill='%2314171F'/%3E%3C/svg%3E">
+<script src="assets/app.js" defer></script>
+<script src="assets/quicktest.js" defer></script>
+</head>
+<body data-page="test">
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="9" cy="10" r="4" fill="#2853C7"/><circle cx="19" cy="9" r="3" fill="#2853C7" opacity="0.55"/><circle cx="14" cy="19" r="5" fill="#14171F"/></svg>
+      <span>clustaudit</span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html#gallery">Audits</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#cite">Paper</a>
+      <a href="https://github.com/frederic-ros/clustaudit">GitHub</a>
+      <a class="btn btn-primary" href="test.html">Test your method</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding-top:40px;padding-bottom:24px;display:flex;flex-direction:column;gap:32px">
+  <div class="stack" style="gap:8px">
+    <h1 style="font-size:40px;letter-spacing:-0.02em">Test your method</h1>
+    <p class="muted" style="font-size:17px;max-width:760px">Wrap your algorithm in one function, try it here in seconds, then launch the full audit. The quick test runs in your browser: your code does not leave your machine until you launch the audit.</p>
+  </div>
+
+  <section aria-labelledby="s1" class="row" style="align-items:stretch;gap:24px">
+    <div class="editor">
+      <div class="bar">
+        <label for="code" id="s1" class="mono">my_method.py</label>
+        <span>Start from <select id="example" aria-label="Start from an example">
+          <option value="kmeans">K-Means</option><option value="hdbscan">HDBSCAN</option><option value="blank">blank template</option>
+        </select></span>
+      </div>
+      <textarea id="code" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="code-help"></textarea>
+    </div>
+    <form class="card form" id="meta" onsubmit="return false">
+      <div class="field">
+        <label for="mname">Method name</label>
+        <input class="ctl" id="mname" type="text" value="my-kmeans" maxlength="60" required>
+      </div>
+      <fieldset class="field">
+        <legend>Does it need the number of clusters?</legend>
+        <label><input type="radio" name="needk" value="yes" checked> Yes, give it the true K (protocol F)</label>
+        <label><input type="radio" name="needk" value="no"> No, it chooses K itself</label>
+      </fieldset>
+      <div class="field">
+        <label for="mfam">Family</label>
+        <select class="ctl" id="mfam"><option>Centroid</option><option>Connectivity</option><option>Density</option><option>Graph</option><option>Deep</option><option>Other</option></select>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg" id="run">Run quick test in my browser</button>
+      <p class="tiny" id="code-help">Python runs locally in WebAssembly (Pyodide, with numpy, SciPy and scikit-learn). The first run downloads it once and takes a few seconds. <code>cluster(X, seed, n_clusters=None)</code> returns one integer per row of X; −1 marks a point left unassigned.</p>
+    </form>
+  </section>
+
+  <section aria-labelledby="s2" class="card" id="results" style="padding:28px;display:flex;flex-direction:column;gap:22px" hidden>
+    <div class="row" style="justify-content:space-between;align-items:baseline">
+      <h2 id="s2" style="font-size:26px">Quick test</h2>
+      <span class="small muted">Three generated datasets, 2-D, four clusters, seed 7</span>
+    </div>
+    <p class="progress" id="progress" role="status" aria-live="polite"></p>
+    <div class="panels" id="panels"></div>
+    <p class="tiny" id="panel-legend" hidden>Colours: the four largest clusters your method returned. Light grey: any further cluster. Open circles: points left unassigned (−1). ARI on the points that belong to a cluster.</p>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <ul class="checks" id="checks" aria-label="Pre-audit checks" style="flex:1 1 420px;min-width:0"></ul>
+      <p class="small muted" id="note" style="flex:1 1 300px;min-width:0;line-height:1.55"></p>
+    </div>
+  </section>
+
+  <section aria-labelledby="s3" class="row" style="align-items:stretch;gap:24px">
+    <form class="card form" style="flex:999 1 560px;padding:28px" onsubmit="return false">
+      <h2 id="s3" style="font-size:26px">Launch the full audit</h2>
+      <dl class="stats">
+        <div><dt>Battery</dt><dd>paper-v2.2</dd></div>
+        <div><dt>Runs</dt><dd>75 suite + 175 sweeps</dd></div>
+        <div><dt>Estimated time</dt><dd id="est">a few minutes</dd></div>
+      </dl>
+      <p class="small muted">The audit runs on GitHub: a submission is a GitHub issue with your code, prefilled from this page (a GitHub account is needed). A maintainer starts the run; the result is posted in the issue and published here.</p>
+      <label class="small" style="display:flex;gap:10px;align-items:flex-start;line-height:1.5"><input type="checkbox" id="consent" style="margin-top:3px"> I agree that my function and its audit card are published on this site under the MIT licence.</label>
+      <div class="row">
+        <a class="btn btn-dark btn-lg" id="launch" aria-disabled="true" target="_blank" rel="noopener">Launch full audit</a>
+        <span class="tiny" id="launch-note"></span>
+      </div>
+      <details>
+        <summary>Or run the audit on your own machine</summary>
+        <div class="stack">
+          <p class="small">For a method you cannot publish, or to iterate before submitting. Same battery, same scoring, same card.</p>
+          <pre class="out">git clone https://github.com/<span id="repo-slug">frederic-ros/clustaudit-audits</span>.git
+cd clustaudit-audits
+pip install -r requirements.txt
+python -m auditkit check my_method.py
+python -m auditkit audit my_method.py --out my_method.audit.json</pre>
+        </div>
+      </details>
+    </form>
+    <aside class="card form" aria-label="After you launch" style="flex:1 1 320px;padding:28px">
+      <span class="fig-title">After you launch</span>
+      <ol class="ol-steps">
+        <li><span class="n">1</span><span class="stack" style="gap:2px"><span class="t">Submit the issue</span><span class="tiny">GitHub opens with your name, family and code filled in. Check them and press "Create".</span></span></li>
+        <li><span class="n">2</span><span class="stack" style="gap:2px"><span class="t">A maintainer starts the run</span><span class="tiny">One look at the code, then the label <code>audit</code> launches it. This keeps the free runners for real submissions.</span></span></li>
+        <li><span class="n">3</span><span class="stack" style="gap:2px"><span class="t">The battery runs in isolation</span><span class="tiny">Your code runs on 250 datasets in a GitHub Actions job that has no access to the repository. Scoring runs in a separate job that never executes your code.</span></span></li>
+        <li><span class="n">4</span><span class="stack" style="gap:2px"><span class="t">The card is published</span><span class="tiny">The issue gets the card as a comment and the link to its page here, with a badge for your README.</span></span></li>
+      </ol>
+    </aside>
+  </section>
+</main>
+<footer class="site-footer" id="cite">
+  <div class="wrap">
+    <div class="stack" style="flex:1 1 520px;min-width:0;gap:10px">
+      <span class="title">Cite</span>
+      <p>F. Ros, R. Riad, Y. Nasser. <em>Interventional Auditing of Clustering Algorithms: Controlled Difficulty Sweeps Beyond Benchmarking</em> (submitted).</p>
+      <p>Software and result files: clustaudit 2.2.0, <a href="https://doi.org/10.5281/zenodo.24239816">doi:10.5281/zenodo.24239816</a></p>
+    </div>
+    <div class="stack" style="gap:10px;font-size:15px">
+      <a href="https://github.com/frederic-ros/clustaudit">clustaudit on GitHub</a>
+      <a href="https://doi.org/10.5281/zenodo.24239815">All versions on Zenodo</a>
+      <span style="color:#B9C0CC">MIT licence</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

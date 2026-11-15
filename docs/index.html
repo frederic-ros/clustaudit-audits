@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>clustaudit · audits of clustering algorithms</title>
+<meta name="description" content="Interventional audits of clustering algorithms: where a method breaks, at what level, and whether it fails silently or visibly.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='9' cy='10' r='4' fill='%232853C7'/%3E%3Ccircle cx='19' cy='9' r='3' fill='%232853C7' opacity='.55'/%3E%3Ccircle cx='14' cy='19' r='5' fill='%2314171F'/%3E%3C/svg%3E">
+<script src="assets/app.js" defer></script>
+</head>
+<body data-page="home">
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><circle cx="9" cy="10" r="4" fill="#2853C7"/><circle cx="19" cy="9" r="3" fill="#2853C7" opacity="0.55"/><circle cx="14" cy="19" r="5" fill="#14171F"/></svg>
+      <span>clustaudit</span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html#gallery">Audits</a>
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#cite">Paper</a>
+      <a href="https://github.com/frederic-ros/clustaudit">GitHub</a>
+      <a class="btn btn-primary" href="test.html">Test your method</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="wrap hero">
+    <div class="hero-text">
+      <p class="eyebrow">Interventional auditing of clustering algorithms</p>
+      <h1>Not a ranking.<br>An audit.</h1>
+      <p class="lead">A ranking says which method scored best on a dataset. An audit says under which conditions a method fails, at what level, and in what form: silently, or visibly enough for a user to notice.</p>
+      <div class="row" style="margin-top:8px">
+        <a class="btn btn-primary btn-lg" href="test.html">Test your method</a>
+        <a class="btn btn-ghost btn-lg" href="#gallery">Browse the audits</a>
+      </div>
+      <p class="small muted">Quick test in your browser · full audit on a fixed, published battery · a citable audit card for every method</p>
+    </div>
+    <figure class="card hero-fig">
+      <figcaption class="stack" style="gap:4px">
+        <span class="fig-title">Same data, same amount of noise. Only its placement changes.</span>
+        <span class="small muted">Inlier ARI as the noise moves from distant outliers to points between clusters.</span>
+      </figcaption>
+      <div id="hero-chart" class="stack" style="gap:8px"><p class="tiny">Loading…</p></div>
+      <p class="tiny">Protocol F, η = 0.3, mean of five seeds, from the reference audits below.</p>
+    </figure>
+  </section>
+
+  <section id="how" class="band">
+    <div class="wrap section">
+      <h2>Audit a new algorithm in three steps</h2>
+      <div class="steps">
+        <div class="step"><span class="k">1 · Write one function</span><code>cluster(X, seed) → labels</code><p>About ten lines of Python around your method. Label −1 marks a point your method leaves unassigned.</p></div>
+        <div class="step"><span class="k">2 · Quick test in your browser</span><p>Your code runs locally, on three small generated datasets. You see the clusters it finds and whether it passes the pre-audit. Nothing is uploaded.</p></div>
+        <div class="step"><span class="k">3 · Full audit, published</span><p>The fixed battery of the paper: the 75-dataset suite and six single-factor sweeps, 250 datasets. You receive an audit card to cite and a badge for your README.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery" class="wrap section">
+    <div class="row" style="justify-content:space-between;align-items:flex-end;gap:16px">
+      <div class="stack" style="gap:6px">
+        <h2>Reference audits</h2>
+        <p class="muted">Nine classical methods under the paper's battery, protocol F. Each card gives where the method breaks, and how.</p>
+      </div>
+      <div id="family-filter" class="filters" role="group" aria-label="Filter by family"></div>
+    </div>
+    <div id="gallery-ref" class="grid3" aria-live="polite"><p class="tiny">Loading…</p></div>
+    <h2 style="font-size:26px;margin-top:16px">Submitted audits</h2>
+    <div id="gallery-sub" class="grid3" aria-live="polite"></div>
+    <p class="tiny">"Breaks at": first level where the mean inlier ARI over five seeds falls below 0.5. "Fails silently": a well-formed but wrong partition. "Fails detectably": a degenerate output a user can see without labels (fewer than two clusters, or most points rejected).</p>
+  </section>
+</main>
+<footer class="site-footer" id="cite">
+  <div class="wrap">
+    <div class="stack" style="flex:1 1 520px;min-width:0;gap:10px">
+      <span class="title">Cite</span>
+      <p>F. Ros, R. Riad, Y. Nasser. <em>Interventional Auditing of Clustering Algorithms: Controlled Difficulty Sweeps Beyond Benchmarking</em> (submitted).</p>
+      <p>Software and result files: clustaudit 2.2.0, <a href="https://doi.org/10.5281/zenodo.24239816">doi:10.5281/zenodo.24239816</a></p>
+    </div>
+    <div class="stack" style="gap:10px;font-size:15px">
+      <a href="https://github.com/frederic-ros/clustaudit">clustaudit on GitHub</a>
+      <a href="https://doi.org/10.5281/zenodo.24239815">All versions on Zenodo</a>
+      <span style="color:#B9C0CC">MIT licence</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

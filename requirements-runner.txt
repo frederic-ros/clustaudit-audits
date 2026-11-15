@@ -1,0 +1,7 @@
+# Environment in which submitted methods run (GitHub Actions job without permissions).
+# Same numerical stack as the scoring side; clustaudit itself is not needed to run a method.
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.5
+scikit-learn==1.9.1
+threadpoolctl>=3.1

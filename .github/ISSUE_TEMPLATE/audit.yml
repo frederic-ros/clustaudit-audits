@@ -1,0 +1,67 @@
+name: Audit request
+description: Run the clustaudit battery (paper-v2.2, 250 datasets) on a clustering method and publish its audit card.
+title: "Audit: "
+labels: ["audit-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Your method is one Python function, `cluster(X, seed, n_clusters=None)`, returning one integer label per row of `X` (-1 = point left unassigned).
+        Test it first in your browser on the site (**Test your method**). A maintainer reviews the code and adds the label `audit`, which starts the run.
+        The code runs in an isolated GitHub Actions job without access to this repository; the result is posted here as a comment.
+  - type: input
+    id: name
+    attributes:
+      label: Method name
+      description: Shown on the audit card (60 characters at most).
+      placeholder: my-method
+    validations:
+      required: true
+  - type: dropdown
+    id: family
+    attributes:
+      label: Family
+      options:
+        - Centroid
+        - Connectivity
+        - Density
+        - Graph
+        - Deep
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: needs_k
+    attributes:
+      label: Does the method need the number of clusters?
+      options:
+        - "Yes, give it the true K (protocol F)"
+        - "No, it chooses K itself"
+    validations:
+      required: true
+  - type: input
+    id: requirements
+    attributes:
+      label: Extra Python packages (optional)
+      description: Names with optional version bounds, separated by spaces (numpy, scipy, scikit-learn and pandas are already installed).
+      placeholder: "hdbscan==0.8.40"
+  - type: textarea
+    id: code
+    attributes:
+      label: Method code
+      description: The whole file. It must define `def cluster(X, seed, n_clusters=None)`.
+      render: python
+    validations:
+      required: true
+  - type: input
+    id: reference
+    attributes:
+      label: Reference (optional)
+      description: Paper, DOI or repository of the method.
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Publication
+      options:
+        - label: I agree that my function and its audit card are published on this site under the MIT licence.
+          required: true

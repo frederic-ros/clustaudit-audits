@@ -1,0 +1,483 @@
+{
+ "schema": "clustaudit-audit-index/1",
+ "battery": "paper-v2.2",
+ "audits": [
+  {
+   "id": "kmeans",
+   "name": "K-Means",
+   "family": "Centroid",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:55:58Z",
+   "issue": null,
+   "sigma": "1 [0.8, 1]",
+   "alpha": "8 [5, >max]",
+   "delta": ">max [0.75, >max]",
+   "f1": 0.0613,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.7148,
+     0.7801,
+     0.6691,
+     0.6025,
+     0.3797,
+     0.2663,
+     0.2079
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0419,
+     0.0747,
+     0.5179,
+     0.5724,
+     1.0
+    ]
+   },
+   "suite_ari": 0.657,
+   "wall_time_s": 4.3
+  },
+  {
+   "id": "gmm",
+   "name": "GMM",
+   "family": "Centroid",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:56:08Z",
+   "issue": null,
+   "sigma": "0.2 [0.2, 0.4]",
+   "alpha": "4 [1, 5]",
+   "delta": "0 [0, >max]",
+   "f1": 0.0525,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.4853,
+     0.1491,
+     0.0706,
+     0.0611,
+     0.0006,
+     0.0006,
+     0.0004
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0,
+     0.0747,
+     0.2242,
+     0.2242,
+     0.9241
+    ]
+   },
+   "suite_ari": 0.3571,
+   "wall_time_s": 3.9
+  },
+  {
+   "id": "spectral",
+   "name": "Spectral",
+   "family": "Graph",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:56:23Z",
+   "issue": null,
+   "sigma": "1.2 [1, 1.4]",
+   "alpha": "10 [8, 10]",
+   "delta": ">max [>max, >max]",
+   "f1": 0.4968,
+   "failure": "silent",
+   "failure_fraction": 0.8,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     1.0,
+     0.9911,
+     0.9441,
+     0.7798,
+     0.522,
+     0.3173,
+     0.2246
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     1.0,
+     0.9993,
+     0.9964,
+     0.9957,
+     0.9929
+    ]
+   },
+   "suite_ari": 0.7973,
+   "wall_time_s": 8.7
+  },
+  {
+   "id": "ward",
+   "name": "Ward",
+   "family": "Connectivity",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:56:32Z",
+   "issue": null,
+   "sigma": "0.4 [0.2, 0.8]",
+   "alpha": "6 [1, 6]",
+   "delta": "0 [0, >max]",
+   "f1": 0.0384,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.5872,
+     0.4797,
+     0.3493,
+     0.1682,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0,
+     0.0419,
+     0.1163,
+     0.3888,
+     0.9656
+    ]
+   },
+   "suite_ari": 0.415,
+   "wall_time_s": 3.1
+  },
+  {
+   "id": "average",
+   "name": "Average linkage",
+   "family": "Connectivity",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:56:42Z",
+   "issue": null,
+   "sigma": "≤0.2",
+   "alpha": "≤1",
+   "delta": "≤0",
+   "f1": 0.0199,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.9711
+    ]
+   },
+   "suite_ari": 0.0667,
+   "wall_time_s": 3.3
+  },
+  {
+   "id": "dbscan",
+   "name": "DBSCAN",
+   "family": "Density",
+   "needs_k": false,
+   "reference": true,
+   "created": "2026-11-15T07:56:49Z",
+   "issue": null,
+   "sigma": "0.4 [0.4, 0.4]",
+   "alpha": "2 [1, 3]",
+   "delta": "0.5 [0.25, 0.5]",
+   "f1": 0.0026,
+   "failure": "detectable",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.9876,
+     0.0,
+     0.0,
+     -0.0001,
+     -0.0007,
+     -0.002,
+     -0.001
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.0,
+     0.0,
+     0.0,
+     0.2972,
+     0.4475
+    ]
+   },
+   "suite_ari": 0.4187,
+   "wall_time_s": 3.1
+  },
+  {
+   "id": "hdbscan",
+   "name": "HDBSCAN",
+   "family": "Density",
+   "needs_k": false,
+   "reference": true,
+   "created": "2026-11-15T07:57:00Z",
+   "issue": null,
+   "sigma": "0.4 [0.2, 0.4]",
+   "alpha": "3 [1, 3]",
+   "delta": ">max [0, >max]",
+   "f1": 0.391,
+   "failure": "detectable",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.5567,
+     0.1024,
+     0.0038,
+     -0.0015,
+     0.0003,
+     0.0001,
+     0.0014
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     1.0,
+     0.4735,
+     0.4204,
+     0.3942,
+     0.3406
+    ]
+   },
+   "suite_ari": 0.454,
+   "wall_time_s": 5.4
+  },
+  {
+   "id": "optics",
+   "name": "OPTICS",
+   "family": "Density",
+   "needs_k": false,
+   "reference": true,
+   "created": "2026-11-15T07:58:19Z",
+   "issue": null,
+   "sigma": "0.2 [0.2, 0.4]",
+   "alpha": "1.5 [1, 1.5]",
+   "delta": "0 [0, 0.25]",
+   "f1": 0.5405,
+   "failure": "detectable",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.2387,
+     0.0001,
+     0.0001,
+     0.0001,
+     0.0003,
+     0.0009,
+     -0.0003
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     0.9079,
+     0.1266,
+     0.0005,
+     0.0002,
+     0.0003
+    ]
+   },
+   "suite_ari": 0.3284,
+   "wall_time_s": 75.5
+  },
+  {
+   "id": "dpc",
+   "name": "Density peaks",
+   "family": "Density",
+   "needs_k": true,
+   "reference": true,
+   "created": "2026-11-15T07:58:28Z",
+   "issue": null,
+   "sigma": "0.6 [0.4, 0.6]",
+   "alpha": "3 [1, 6]",
+   "delta": "0.75 [0.5, >max]",
+   "f1": 0.0529,
+   "failure": "silent",
+   "failure_fraction": 1.0,
+   "overlap": {
+    "values": [
+     0.2,
+     0.4,
+     0.6,
+     0.8,
+     1.0,
+     1.2,
+     1.4
+    ],
+    "ari": [
+     0.9994,
+     0.5605,
+     0.3093,
+     0.1533,
+     0.0453,
+     0.0298,
+     0.0256
+    ]
+   },
+   "eta_int": {
+    "values": [
+     0.0,
+     0.25,
+     0.5,
+     0.75,
+     1.0
+    ],
+    "ari": [
+     1.0,
+     0.9824,
+     0.9036,
+     0.8015,
+     0.8075
+    ]
+   },
+   "suite_ari": 0.5114,
+   "wall_time_s": 3.2
+  }
+ ]
+}
